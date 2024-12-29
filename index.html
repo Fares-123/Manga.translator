@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ترجمة المانجا</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        input { padding: 10px; margin: 10px; width: 80%; }
+        button { padding: 10px 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>ترجمة المانجا</h1>
+    <form id="uploadForm">
+        <input type="url" id="chapterLink" placeholder="أدخل رابط الفصل" required>
+        <button type="submit">ترجمة الفصل</button>
+    </form>
+    <p id="status"></p>
+    <script>
+        document.getElementById("uploadForm").addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const link = document.getElementById("chapterLink").value;
+            document.getElementById("status").textContent = "جاري الإرسال...";
+            
+            const response = await fetch("https://your-backend-url.com/process", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ chapterLink: link }),
+            });
+            const result = await response.json();
+            document.getElementById("status").textContent = result.message || "تمت العملية بنجاح!";
+        });
+    </script>
+</body>
+</html>
