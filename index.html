@@ -1,77 +1,101 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ترجمة المانجا</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; text-align: center; }
-        input, button { margin: 10px; padding: 10px; font-size: 16px; }
-        img { width: 300px; height: auto; margin: 20px; border: 1px solid #ccc; }
-        .image-box { border: 1px solid #ddd; margin: 20px auto; padding: 10px; width: 80%; }
-        textarea { width: 90%; height: 100px; margin: 10px auto; display: block; }
-        label { font-weight: bold; display: block; margin-top: 10px; }
-    </style>
+    <title>Image Translator</title>
 </head>
 <body>
-    <h1>ترجمة المانجا</h1>
-    <form id="chapterForm">
-        <input type="url" id="chapterLink" placeholder="أدخل رابط الفصل" required>
-        <button type="submit">استيراد الفصل</button>
+    <h1>أداة ترجمة الفصول</h1>
+
+    <!-- استيراد الصور -->
+    <form id="importForm">
+        <label for="chapterLink">رابط الفصل:</label>
+        <input type="text" id="chapterLink" placeholder="أدخل رابط الفصل">
+        
+        <label for="folderName">اسم المجلد:</label>
+        <input type="text" id="folderName" placeholder="اسم المجلد">
+
+        <label for="tags">الفلاتر (Tags):</label>
+        <input type="text" id="tags" placeholder="أدخل الفلاتر مفصولة بفواصل">
+
+        <button type="submit">استيراد</button>
     </form>
 
-    <div id="imagesContainer"></div>
-    <button id="processButton" style="display:none;">ترجمة الصور المختارة</button>
+    <!-- رفع الصور -->
+    <div id="results"></div>
+    <button id="uploadButton" style="display: none;">رفع الفصل</button>
+
+    <!-- البحث -->
+    <form id="searchForm">
+        <label for="searchQuery">بحث:</label>
+        <input type="text" id="searchQuery" placeholder="أدخل النص">
+        <button type="submit">بحث</button>
+    </form>
+    <div id="searchResults"></div>
 
     <script>
-        document.getElementById("chapterForm").addEventListener("submit", async (event) => {
-            event.preventDefault();
-            const chapterLink = document.getElementById("chapterLink").value;
+        const importForm = document.getElementById('importForm');
+        const results = document.getElementById('results');
+        const uploadButton = document.getElementById('uploadButton');
+        const searchForm = document.getElementById('searchForm');
+        const searchResults = document.getElementById('searchResults');
 
-            const response = await fetch("https://your-backend-url.com/import", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ chapterLink })
+        importForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const chapterLink = document.getElementById('chapterLink').value;
+            const folderName = document.getElementById('folderName').value;
+            const tags = document.getElementById('tags').value.split(',');
+
+            const response = await fetch('http://127.0.0.1:5000/import', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chapterLink, folderName, tags })
             });
 
             const data = await response.json();
-            const imagesContainer = document.getElementById("imagesContainer");
-            imagesContainer.innerHTML = "";
-
-            data.images.forEach((image, index) => {
-                const imageBox = document.createElement("div");
-                imageBox.classList.add("image-box");
-
-                imageBox.innerHTML = `
-                    <label>
-                        <input type="checkbox" name="selectedImages" value="${image}" />
-                        اختر هذه الصورة
-                    </label>
-                    <img src="${image}" alt="الصورة ${index + 1}">
-                    <textarea id="text-${index}">${data.texts[index]}</textarea>
-                `;
-
-                imagesContainer.appendChild(imageBox);
-            });
-
-            document.getElementById("processButton").style.display = "block";
+            if (data.error) {
+                results.innerHTML = `<p>Error: ${data.error}</p>`;
+            } else {
+                results.innerHTML = data.images.map((img, index) => `
+                    <div>
+                        <img src="${img.image}" alt="Image ${index + 1}" width="200">
+                        <textarea>${img.translated_text}</textarea>
+                    </div>
+                `).join('');
+                uploadButton.style.display = 'block';
+            }
         });
 
-        document.getElementById("processButton").addEventListener("click", async () => {
-            const selectedImages = Array.from(document.querySelectorAll('input[name="selectedImages"]:checked'))
-                .map(input => ({
-                    url: input.value,
-                    translatedText: document.getElementById(`text-${Array.from(input.parentElement.parentElement.parentNode.children).indexOf(input.parentElement.parentElement)}`).value
-                }));
+        uploadButton.addEventListener('click', async () => {
+            const images = Array.from(document.querySelectorAll('textarea')).map((textarea, index) => ({
+                image: `temp_images/${(index + 1).toString().padStart(3, '0')}.jpg`,
+                translated_text: textarea.value
+            }));
 
-            const response = await fetch("https://your-backend-url.com/translate", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ selectedImages })
+            const folderName = document.getElementById('folderName').value;
+            const tags = document.getElementById('tags').value.split(',');
+
+            const response = await fetch('http://127.0.0.1:5000/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ images, folderName, tags })
             });
 
-            const result = await response.json();
-            alert(result.message || "تمت الترجمة بنجاح!");
+            const data = await response.json();
+            alert(data.message || data.error);
+        });
+
+        searchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const query = document.getElementById('searchQuery').value;
+
+            const response = await fetch(`http://127.0.0.1:5000/search?query=${query}`);
+            const data = await response.json();
+
+            searchResults.innerHTML = data.results.length
+                ? `<ul>${data.results.map(result => `<li>${result}</li>`).join('')}</ul>`
+                : `<p>لا توجد نتائج</p>`;
         });
     </script>
 </body>
