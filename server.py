@@ -12,7 +12,7 @@ translator = Translator()
 TEMP_FOLDER = "temp_images"
 os.makedirs(TEMP_FOLDER, exist_ok=True)
 
-GITHUB_TOKEN = "your_github_token"  # ضع GitHub Token هنا
+GITHUB_TOKEN = "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"  # ضع GitHub Token هنا
 REPO_NAME = "username/translated-chapters"  # اسم المستودع
 github = Github(GITHUB_TOKEN)
 repo = github.get_repo(REPO_NAME)
