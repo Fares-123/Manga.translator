@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import os
 import requests
 from pytesseract import image_to_string, Output
@@ -6,7 +6,7 @@ from PIL import Image, ImageDraw, ImageFont
 from googletrans import Translator
 from github import Github
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static", template_folder="templates")
 translator = Translator()
 
 TEMP_FOLDER = "temp_images"
@@ -17,6 +17,12 @@ REPO_NAME = "username/translated-chapters"  # اسم المستودع
 github = Github(GITHUB_TOKEN)
 repo = github.get_repo(REPO_NAME)
 
+# المسار الرئيسي يعرض الصفحة الرئيسية
+@app.route("/")
+def home():
+    return render_template("index.html")
+
+# API لمعالجة الصور ورفعها
 @app.route("/process_and_upload", methods=["POST"])
 def process_and_upload():
     data = request.json
@@ -74,7 +80,6 @@ def process_and_upload():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 if __name__ == "__main__":
     app.run(debug=True)
