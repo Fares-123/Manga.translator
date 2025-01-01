@@ -4,3 +4,4 @@ pytesseract
 Pillow
 googletrans==4.0.0-rc1
 PyGithub
+gunicorn==<version_number>
