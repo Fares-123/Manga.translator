@@ -13,8 +13,8 @@ TEMP_FOLDER = "temp_images"
 os.makedirs(TEMP_FOLDER, exist_ok=True)
 
 
-GITHUB_TOKEN = "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"  # ضع GitHub Token هنا
-github = Github(GITHUB_TOKEN)  # استخدم التوكن هنا
+GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')  # استدعاء التوكن من المتغير البيئي
+github = Github(GITHUB_TOKEN)
 repo = github.get_repo("Fares-123/Manga.translator")  # اسم المستودع
 
 
