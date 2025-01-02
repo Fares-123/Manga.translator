@@ -20,9 +20,11 @@ if not GITHUB_TOKEN:
 github = Github(GITHUB_TOKEN)
 repo = github.get_repo("Fares-123/Manga.translator")  # اسم المستودع
 
-# المسار الرئيسي يعرض الصفحة الرئيسية
-@app.route("/")
+# المسار الرئيسي يعرض الصفحة الرئيسية ويدعم GET و HEAD
+@app.route("/", methods=["GET", "HEAD"])
 def home():
+    if request.method == "HEAD":
+        return "", 200  # استجابة فارغة للطلبات من النوع HEAD
     return render_template("index.html")
 
 # API لمعالجة الصور ورفعها
@@ -38,6 +40,7 @@ def process_and_upload():
 
     try:
         response = requests.get(chapter_link)
+        response.raise_for_status()  # التحقق من نجاح الطلب
         image_urls = [line.strip() for line in response.text.split("\n") if line.endswith((".jpg", ".png"))]
         folder_path = f"{folder_name}/"
         results = []
@@ -84,4 +87,4 @@ def process_and_upload():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# لا داعي لتشغيل التطبيق هنا لأن Gunicorn سيشغل الخادم
+# لا داعي لتشغيل التطبيق هنا لأن Gunicorn سيشغل الخادم في بيئة الإنتاج
