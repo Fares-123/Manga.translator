@@ -25,7 +25,7 @@ repo = github.get_repo("Fares-123/Manga.translator")  # اسم المستودع
 def home():
     if request.method == "HEAD":
         return "", 200  # استجابة فارغة للطلبات من النوع HEAD
-    return render_template("Templates")
+    return render_template("index.html")
 
 # API لمعالجة الصور ورفعها
 @app.route("/process_and_upload", methods=["POST"])
