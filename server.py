@@ -19,7 +19,7 @@ if not GITHUB_TOKEN:
     raise ValueError("GitHub Token is not set in environment variables")
 
 # اسم المستودع (قم بتعديل اسم المستخدم واسم المستودع)
-REPO_NAME = "fares123/manga-translator"
+REPO_NAME = "fares123/manga.translator"
 
 # إعداد الاتصال بـ GitHub
 try:
