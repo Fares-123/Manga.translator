@@ -1,5 +1,6 @@
-from flask import Flask, request, jsonify, redirect, url_for, render_template
+import json
 import os
+from flask import Flask, request, jsonify, redirect, url_for, render_template
 import requests
 from pytesseract import image_to_string, Output
 from PIL import Image, ImageDraw, ImageFont
@@ -13,12 +14,26 @@ translator = Translator()
 TEMP_FOLDER = "temp_images"
 os.makedirs(TEMP_FOLDER, exist_ok=True)
 
+# قراءة ملف config.json
+def load_config():
+    try:
+        with open('config.json', 'r', encoding='utf-8') as config_file:
+            config = json.load(config_file)
+        return config
+    except Exception as e:
+        raise ValueError(f"Error reading config.json: {e}")
+
+# تحميل الإعدادات
+config = load_config()
+tags = config.get("tags", [])
+folder_name = config.get("folderName", "Default")
+
 # قراءة GitHub Token من متغيرات البيئة
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 if not GITHUB_TOKEN:
     raise ValueError("GitHub Token is not set in environment variables")
 
-# اسم المستودع (قم بتعديل اسم المستخدم واسم المستودع)
+# اسم المستودع
 REPO_NAME = "Fares-123/Manga.translator"
 
 # إعداد الاتصال بـ GitHub
@@ -30,14 +45,14 @@ except Exception as e:
 
 @app.route("/")
 def home():
-    return render_template("index.html")  # توجيه المستخدم إلى الصفحة الرئيسية (index.html)
+    return render_template("index.html")
 
 @app.route("/process_and_upload", methods=["POST"])
 def process_and_upload():
     data = request.json
     chapter_link = data.get("chapterLink")
-    folder_name = data.get("folderName", "Default")
-    tags = data.get("tags", [])
+    folder_name = data.get("folderName", folder_name)  # استخدم القيمة من config إذا لم يتم تقديمها في الطلب
+    tags = data.get("tags", tags)  # استخدم القيمة من config إذا لم يتم تقديمها في الطلب
 
     # التحقق من صحة المدخلات
     if not chapter_link:
@@ -47,14 +62,7 @@ def process_and_upload():
         # تنزيل بيانات الفصل
         response = requests.get(chapter_link)
         response.raise_for_status()
-        
-        # استخراج روابط الصور بتنسيقات صحيحة فقط
-        image_urls = [line.strip() for line in response.text.split("\n") if line.endswith((".jpg", ".png", ".gif", ".bmp"))]
-        
-        # تحقق من أن الصور تم استخراجها بشكل صحيح
-        if not image_urls:
-            return jsonify({"error": "لم يتم العثور على صور في الرابط المحدد."}), 400
-
+        image_urls = [line.strip() for line in response.text.split("\n") if line.endswith((".jpg", ".png"))]
         folder_path = f"{folder_name}/"
         results = []
 
@@ -102,18 +110,17 @@ def process_and_upload():
             })
 
         # رفع ملف العلامات (Tags)
-        if tags:
-            tags_file_path = os.path.join(TEMP_FOLDER, "tags.txt")
-            with open(tags_file_path, "w", encoding="utf-8") as tags_file:
-                tags_file.write(", ".join(tags))
+        tags_file_path = os.path.join(TEMP_FOLDER, "tags.txt")
+        with open(tags_file_path, "w", encoding="utf-8") as tags_file:
+            tags_file.write(", ".join(tags))
 
-            with open(tags_file_path, "rb") as tags_file:
-                repo.create_file(
-                    f"{folder_path}/tags.txt",
-                    "Add tags",
-                    tags_file.read(),
-                    branch="main"
-                )
+        with open(tags_file_path, "rb") as tags_file:
+            repo.create_file(
+                f"{folder_path}/tags.txt",
+                "Add tags",
+                tags_file.read(),
+                branch="main"
+            )
 
         return redirect(url_for('home'))  # التوجيه إلى الصفحة الرئيسية بعد رفع الصور والعلامات
 
