@@ -19,14 +19,18 @@ def load_config():
     try:
         with open('config.json', 'r', encoding='utf-8') as config_file:
             config = json.load(config_file)
+            print(f"Config loaded successfully: {config}")  # للتأكد من قراءة البيانات
         return config
     except Exception as e:
-        raise ValueError(f"Error reading config.json: {e}")
+        print(f"Error reading config.json: {e}")
+        return {}
 
 # تحميل الإعدادات
 config = load_config()
 tags = config.get("tags", [])
 folder_name = config.get("folderName", "Default")
+
+print(f"Loaded folderName: {folder_name}, tags: {tags}")  # طباعة القيم المستخلصة من الملف
 
 # قراءة GitHub Token من متغيرات البيئة
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -57,6 +61,8 @@ def process_and_upload():
     # التحقق من صحة المدخلات
     if not chapter_link:
         return jsonify({"error": "يجب إدخال رابط الفصل"}), 400
+
+    print(f"Processing chapter link: {chapter_link}, using folder: {folder_name}, tags: {tags}")  # طباعة المدخلات
 
     try:
         # تنزيل بيانات الفصل
@@ -125,6 +131,7 @@ def process_and_upload():
         return redirect(url_for('home'))  # التوجيه إلى الصفحة الرئيسية بعد رفع الصور والعلامات
 
     except Exception as e:
+        print(f"Error during processing: {e}")  # طباعة الخطأ الذي حدث
         return jsonify({"error": str(e)}), 500
 
 
@@ -140,6 +147,7 @@ def process_and_save():
         return jsonify({"message": "تمت معالجة البيانات وحفظها بنجاح!"}), 200
 
     except Exception as e:
+        print(f"Error during save processing: {e}")  # طباعة الخطأ الذي حدث
         return jsonify({"error": str(e)}), 500
 
 
