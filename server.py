@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import os
 import requests
 from pytesseract import image_to_string, Output
@@ -27,6 +27,11 @@ try:
     repo = github.get_repo(REPO_NAME)
 except Exception as e:
     raise ValueError(f"Error connecting to GitHub repository: {e}")
+
+@app.route("/")
+def home():
+    # عرض الصفحة الرئيسية من خلال قالب index.html
+    return render_template("index.html")
 
 @app.route("/process_and_upload", methods=["POST"])
 def process_and_upload():
