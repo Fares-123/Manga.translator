@@ -47,7 +47,14 @@ def process_and_upload():
         # تنزيل بيانات الفصل
         response = requests.get(chapter_link)
         response.raise_for_status()
-        image_urls = [line.strip() for line in response.text.split("\n") if line.endswith((".jpg", ".png"))]
+        
+        # استخراج روابط الصور بتنسيقات صحيحة فقط
+        image_urls = [line.strip() for line in response.text.split("\n") if line.endswith((".jpg", ".png", ".gif", ".bmp"))]
+        
+        # تحقق من أن الصور تم استخراجها بشكل صحيح
+        if not image_urls:
+            return jsonify({"error": "لم يتم العثور على صور في الرابط المحدد."}), 400
+
         folder_path = f"{folder_name}/"
         results = []
 
@@ -95,17 +102,18 @@ def process_and_upload():
             })
 
         # رفع ملف العلامات (Tags)
-        tags_file_path = os.path.join(TEMP_FOLDER, "tags.txt")
-        with open(tags_file_path, "w", encoding="utf-8") as tags_file:
-            tags_file.write(", ".join(tags))
+        if tags:
+            tags_file_path = os.path.join(TEMP_FOLDER, "tags.txt")
+            with open(tags_file_path, "w", encoding="utf-8") as tags_file:
+                tags_file.write(", ".join(tags))
 
-        with open(tags_file_path, "rb") as tags_file:
-            repo.create_file(
-                f"{folder_path}/tags.txt",
-                "Add tags",
-                tags_file.read(),
-                branch="main"
-            )
+            with open(tags_file_path, "rb") as tags_file:
+                repo.create_file(
+                    f"{folder_path}/tags.txt",
+                    "Add tags",
+                    tags_file.read(),
+                    branch="main"
+                )
 
         return redirect(url_for('home'))  # التوجيه إلى الصفحة الرئيسية بعد رفع الصور والعلامات
 
