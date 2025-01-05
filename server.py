@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify
 import os
 import requests
 from pytesseract import image_to_string, Output
@@ -27,11 +27,6 @@ try:
     repo = github.get_repo(REPO_NAME)
 except Exception as e:
     raise ValueError(f"Error connecting to GitHub repository: {e}")
-
-@app.route("/")
-def home():
-    # عرض الصفحة الرئيسية من خلال قالب index.html
-    return render_template("index.html")
 
 @app.route("/process_and_upload", methods=["POST"])
 def process_and_upload():
@@ -109,6 +104,21 @@ def process_and_upload():
             )
 
         return jsonify({"message": "تم رفع الصور المعدلة والعلامات بنجاح!", "results": results})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/process_and_save", methods=["POST"])
+def process_and_save():
+    try:
+        # معالجة البيانات القادمة من الطلب
+        data = request.json
+        if not data:
+            return jsonify({"error": "بيانات الطلب غير صالحة"}), 400
+
+        # يمكنك هنا إضافة المنطق الذي تحتاجه لمعالجة البيانات
+        return jsonify({"message": "تمت معالجة البيانات وحفظها بنجاح!"}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
