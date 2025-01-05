@@ -1,18 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>أداة ترجمة الفصول</title>
-     <link rel="stylesheet" href="static/css/styles.css">
+    <link rel="stylesheet" href="static/css/styles.css">
 </head>
 <body>
     <div class="container">
         <h1>أداة ترجمة الفصول</h1>
 
+        <!-- نموذج إرسال البيانات -->
         <form id="uploadForm">
             <label for="chapterLink">رابط الفصل:</label>
-            <input type="text" id="chapterLink" name="chapterLink" placeholder="أدخل رابط الفصل" required>
+            <input type="url" id="chapterLink" name="chapterLink" placeholder="أدخل رابط الفصل" required>
 
             <label for="folderName">اسم المجلد:</label>
             <input type="text" id="folderName" name="folderName" placeholder="أدخل اسم المجلد" value="Default">
@@ -23,8 +24,64 @@
             <button type="submit">رفع الفصل وترجمته</button>
         </form>
 
-        <div id="responseMessage"></div>
+        <!-- منطقة عرض النتائج -->
+        <div id="responseMessage" style="display: none; margin-top: 20px;">
+            <h2>النتائج:</h2>
+            <ul id="resultList"></ul>
+        </div>
     </div>
-<script src="static/js/script.js"></script>
+
+    <script>
+        document.getElementById("uploadForm").addEventListener("submit", async function(event) {
+            event.preventDefault(); // منع إعادة تحميل الصفحة
+
+            // جمع البيانات من الحقول
+            const chapterLink = document.getElementById("chapterLink").value;
+            const folderName = document.getElementById("folderName").value;
+            const tags = document.getElementById("tags").value;
+
+            // إعداد الطلب
+            const requestBody = {
+                chapterLink: chapterLink,
+                folderName: folderName,
+                tags: tags.split(",").map(tag => tag.trim()) // تقسيم الوسوم
+            };
+
+            try {
+                // إرسال البيانات إلى الخادم
+                const response = await fetch("/process_and_save", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(requestBody),
+                });
+
+                // معالجة الرد من الخادم
+                const responseData = await response.json();
+
+                if (response.ok) {
+                    const resultList = document.getElementById("resultList");
+                    resultList.innerHTML = ""; // تنظيف القائمة السابقة
+
+                    responseData.results.forEach((result, index) => {
+                        const listItem = document.createElement("li");
+                        listItem.innerHTML = `
+                            <p><strong>الصورة الأصلية ${index + 1}:</strong> ${result.original_image}</p>
+                            <p><strong>الصورة المترجمة:</strong> ${result.modified_image}</p>
+                        `;
+                        resultList.appendChild(listItem);
+                    });
+
+                    // عرض قسم النتائج
+                    document.getElementById("responseMessage").style.display = "block";
+                } else {
+                    alert(`خطأ: ${responseData.error}`);
+                }
+            } catch (error) {
+                alert(`حدث خطأ أثناء الاتصال بالخادم: ${error.message}`);
+            }
+        });
+    </script>
 </body>
 </html>
