@@ -1,10 +1,12 @@
 import json
 import os
 from flask import Flask, request, jsonify, redirect, url_for, render_template
+import requests
 from pytesseract import image_to_string, Output
 from PIL import Image, ImageDraw, ImageFont
 from googletrans import Translator
 from github import Github
+from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 translator = Translator()
@@ -49,26 +51,53 @@ except Exception as e:
 def home():
     return render_template("index.html")
 
+def download_images_from_html(chapter_link):
+    """دالة لتحميل الصور من صفحة HTML."""
+    try:
+        response = requests.get(chapter_link)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            img_tags = soup.find_all('img')
+            img_urls = [img.get('src') for img in img_tags if img.get('src')]
+            image_paths = []
+
+            for i, img_url in enumerate(img_urls):
+                # التعامل مع الروابط النسبية
+                if img_url.startswith('/'):
+                    img_url = chapter_link + img_url
+                
+                img_data = requests.get(img_url).content
+                img_path = os.path.join(TEMP_FOLDER, f"{i+1:03}.jpg")
+                with open(img_path, 'wb') as img_file:
+                    img_file.write(img_data)
+                image_paths.append(img_path)
+            return image_paths
+        else:
+            raise Exception(f"فشل تحميل الصفحة: {response.status_code}")
+    except Exception as e:
+        print(f"Error during image download: {e}")
+        return []
+
 @app.route("/process_and_upload", methods=["POST"])
 def process_and_upload():
-    # تحميل الصور من النموذج
-    files = request.files.getlist("images")
-    chapter_link = request.form.get("chapterLink")
-    folder_name = request.form.get("folderName", folder_name)  # استخدم القيمة من config إذا لم يتم تقديمها في الطلب
+    data = request.json
+    chapter_link = data.get("chapterLink")
+    folder_name = data.get("folderName", folder_name)  # استخدم القيمة من config إذا لم يتم تقديمها في الطلب
 
-    # التحقق من وجود ملفات
-    if not files:
-        return jsonify({"error": "يجب إدخال صور لتحميلها"}), 400
+    # التحقق من صحة المدخلات
+    if not chapter_link:
+        return jsonify({"error": "يجب إدخال رابط الفصل"}), 400
 
     print(f"Processing chapter link: {chapter_link}, using folder: {folder_name}")  # طباعة المدخلات
 
-    results = []
-    
     try:
-        for i, file in enumerate(files):
-            img_path = os.path.join(TEMP_FOLDER, f"{i+1:03}.jpg")
-            file.save(img_path)
+        # تحميل الصور من رابط HTML
+        image_paths = download_images_from_html(chapter_link)
+        if not image_paths:
+            return jsonify({"error": "لم يتم العثور على صور في الصفحة"}), 400
 
+        results = []
+        for img_path in image_paths:
             # معالجة الصور
             img = Image.open(img_path)
             ocr_data = image_to_string(img, lang="jpn", config="--psm 6", output_type=Output.DICT)
@@ -88,7 +117,7 @@ def process_and_upload():
                     draw.text((x + 5, y + 5), translated_text, fill="black", font=font)
 
             # حفظ الصور المعدلة
-            modified_img_path = os.path.join(TEMP_FOLDER, f"translated_{i+1:03}.jpg")
+            modified_img_path = os.path.join(TEMP_FOLDER, f"translated_{os.path.basename(img_path)}")
             modified_img.save(modified_img_path)
 
             # رفع الصور إلى GitHub
@@ -105,11 +134,12 @@ def process_and_upload():
                 "modified_image": modified_img_path,
             })
 
-        return redirect(url_for('home'))  # التوجيه إلى الصفحة الرئيسية بعد رفع الصور
+        return jsonify({"message": "تمت معالجة الصور ورفعها بنجاح!"}), 200
 
     except Exception as e:
         print(f"Error during processing: {e}")  # طباعة الخطأ الذي حدث
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)
