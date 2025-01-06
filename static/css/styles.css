@@ -1,34 +1,28 @@
-/* تنسيق عام */
 body {
     font-family: Arial, sans-serif;
-    direction: rtl;
-    background-color: #f4f4f4;
     margin: 0;
     padding: 0;
+    background-color: #f4f4f4;
+    text-align: center;
 }
 
-/* تنسيق الحاوية */
 .container {
     max-width: 600px;
     margin: 50px auto;
     padding: 20px;
-    background-color: #fff;
+    background: #fff;
     border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-/* العنوان الرئيسي */
 h1 {
-    font-size: 24px;
-    text-align: center;
-    margin-bottom: 20px;
     color: #333;
+    margin-bottom: 20px;
 }
 
-/* تنسيق الحقول */
 form label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     font-weight: bold;
     color: #555;
 }
@@ -36,48 +30,25 @@ form label {
 form input {
     width: calc(100% - 20px);
     padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 14px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
 }
 
-/* تنسيق الزر */
 form button {
-    width: 100%;
-    padding: 10px;
-    background-color: #007BFF;
+    padding: 10px 20px;
+    background-color: #007bff;
     color: white;
     border: none;
-    border-radius: 5px;
-    font-size: 16px;
+    border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
 }
 
 form button:hover {
     background-color: #0056b3;
 }
 
-/* تنسيق الرسائل */
 #responseMessage {
-    font-size: 16px;
-    color: #333;
-    background-color: #e9ecef;
-    padding: 15px;
-    border-radius: 5px;
-}
-
-/* تنسيق قائمة النتائج */
-#resultList {
-    list-style-type: none;
-    padding: 0;
-}
-
-#resultList li {
-    margin-bottom: 15px;
-    padding: 10px;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+    margin-top: 20px;
+    color: #28a745;
 }
