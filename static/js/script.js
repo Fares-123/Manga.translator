@@ -1,15 +1,14 @@
 document.getElementById("uploadForm").addEventListener("submit", async function (e) {
-    e.preventDefault();  // منع إعادة تحميل الصفحة
+    e.preventDefault(); // منع إعادة تحميل الصفحة
 
     // جمع البيانات من الحقول
     const chapterLink = document.getElementById("chapterLink").value;
     const folderName = document.getElementById("folderName").value || "Default";
-    const tags = document.getElementById("tags").value.split(",").map(tag => tag.trim());
 
     // منطقة عرض الرسالة أثناء المعالجة
     const responseMessage = document.getElementById("responseMessage");
-    responseMessage.textContent = "جارٍ معالجة الفصل...";  // النص أثناء المعالجة
-    responseMessage.style.display = "block";  // عرض الرسالة
+    responseMessage.textContent = "جارٍ معالجة الفصل..."; // النص أثناء المعالجة
+    responseMessage.style.display = "block"; // عرض الرسالة
 
     try {
         // إرسال البيانات إلى الخادم
@@ -18,7 +17,7 @@ document.getElementById("uploadForm").addEventListener("submit", async function 
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ chapterLink, folderName, tags }),
+            body: JSON.stringify({ chapterLink, folderName }), // إرسال البيانات بدون tags
         });
 
         // معالجة الرد من الخادم
@@ -27,7 +26,7 @@ document.getElementById("uploadForm").addEventListener("submit", async function 
         if (response.ok) {
             // عرض الرسالة عند النجاح
             responseMessage.textContent = result.message;
-            displayResults(result.results);  // عرض النتائج في صفحة المستخدم
+            displayResults(result.results); // عرض النتائج في صفحة المستخدم
         } else {
             // عرض رسالة الخطأ إذا فشل الطلب
             responseMessage.textContent = `خطأ: ${result.error}`;
@@ -41,7 +40,7 @@ document.getElementById("uploadForm").addEventListener("submit", async function 
 // عرض النتائج بعد المعالجة
 function displayResults(results) {
     const resultList = document.getElementById("resultList");
-    resultList.innerHTML = "";  // تنظيف القائمة السابقة
+    resultList.innerHTML = ""; // تنظيف القائمة السابقة
 
     results.forEach((result, index) => {
         const listItem = document.createElement("li");
