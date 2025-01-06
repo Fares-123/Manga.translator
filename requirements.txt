@@ -4,6 +4,4 @@ requests==2.32.3
 pytesseract==0.3.13
 Pillow==11.0.0
 googletrans==4.0.0rc1
-PyGithub==2.5.0
 gunicorn==20.1.0
-beautifulsoup4==4.11.1
