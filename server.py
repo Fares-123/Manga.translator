@@ -27,10 +27,9 @@ def load_config():
 
 # تحميل الإعدادات
 config = load_config()
-tags = config.get("tags", [])
 folder_name = config.get("folderName", "Default")
 
-print(f"Loaded folderName: {folder_name}, tags: {tags}")  # طباعة القيم المستخلصة من الملف
+print(f"Loaded folderName: {folder_name}")  # طباعة القيم المستخلصة من الملف
 
 # قراءة GitHub Token من متغيرات البيئة
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -56,13 +55,12 @@ def process_and_upload():
     data = request.json
     chapter_link = data.get("chapterLink")
     folder_name = data.get("folderName", folder_name)  # استخدم القيمة من config إذا لم يتم تقديمها في الطلب
-    tags = data.get("tags", tags)  # استخدم القيمة من config إذا لم يتم تقديمها في الطلب
 
     # التحقق من صحة المدخلات
     if not chapter_link:
         return jsonify({"error": "يجب إدخال رابط الفصل"}), 400
 
-    print(f"Processing chapter link: {chapter_link}, using folder: {folder_name}, tags: {tags}")  # طباعة المدخلات
+    print(f"Processing chapter link: {chapter_link}, using folder: {folder_name}")  # طباعة المدخلات
 
     try:
         # تنزيل بيانات الفصل
@@ -115,20 +113,7 @@ def process_and_upload():
                 "modified_image": modified_img_path,
             })
 
-        # رفع ملف العلامات (Tags)
-        tags_file_path = os.path.join(TEMP_FOLDER, "tags.txt")
-        with open(tags_file_path, "w", encoding="utf-8") as tags_file:
-            tags_file.write(", ".join(tags))
-
-        with open(tags_file_path, "rb") as tags_file:
-            repo.create_file(
-                f"{folder_path}/tags.txt",
-                "Add tags",
-                tags_file.read(),
-                branch="main"
-            )
-
-        return redirect(url_for('home'))  # التوجيه إلى الصفحة الرئيسية بعد رفع الصور والعلامات
+        return redirect(url_for('home'))  # التوجيه إلى الصفحة الرئيسية بعد رفع الصور
 
     except Exception as e:
         print(f"Error during processing: {e}")  # طباعة الخطأ الذي حدث
