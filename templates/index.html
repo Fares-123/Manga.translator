@@ -1,33 +1,25 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أداة ترجمة الفصول</title>
-    <link rel="stylesheet" href="static/css/styles.css">
+    <title>معالج الصور</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>أداة ترجمة الفصول</h1>
-
-        <!-- نموذج إرسال البيانات -->
-        <form id="uploadForm">
+        <h1>معالج الصور وتحميلها</h1>
+        <form id="processForm">
             <label for="chapterLink">رابط الفصل:</label>
             <input type="url" id="chapterLink" name="chapterLink" placeholder="أدخل رابط الفصل" required>
 
             <label for="folderName">اسم المجلد:</label>
-            <input type="text" id="folderName" name="folderName" placeholder="أدخل اسم المجلد" value="Default">
+            <input type="text" id="folderName" name="folderName" placeholder="اسم المجلد" value="المانجا" required>
 
-            <button type="submit">رفع الفصل وترجمته</button>
+            <button type="submit">معالجة الصور وتنزيلها</button>
         </form>
-
-        <!-- منطقة عرض النتائج -->
-        <div id="responseMessage" style="display: none; margin-top: 20px;">
-            <h2>النتائج:</h2>
-            <ul id="resultList"></ul>
-        </div>
+        <div id="responseMessage"></div>
     </div>
-
-    <script src="static/js/script.js"></script>
+    <script src="/static/js/script.js"></script>
 </body>
 </html>
