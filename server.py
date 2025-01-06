@@ -1,7 +1,6 @@
 import json
 import os
 from flask import Flask, request, jsonify, redirect, url_for, render_template
-import requests
 from pytesseract import image_to_string, Output
 from PIL import Image, ImageDraw, ImageFont
 from googletrans import Translator
@@ -52,30 +51,23 @@ def home():
 
 @app.route("/process_and_upload", methods=["POST"])
 def process_and_upload():
-    data = request.json
-    chapter_link = data.get("chapterLink")
-    folder_name = data.get("folderName", folder_name)  # استخدم القيمة من config إذا لم يتم تقديمها في الطلب
+    # تحميل الصور من النموذج
+    files = request.files.getlist("images")
+    chapter_link = request.form.get("chapterLink")
+    folder_name = request.form.get("folderName", folder_name)  # استخدم القيمة من config إذا لم يتم تقديمها في الطلب
 
-    # التحقق من صحة المدخلات
-    if not chapter_link:
-        return jsonify({"error": "يجب إدخال رابط الفصل"}), 400
+    # التحقق من وجود ملفات
+    if not files:
+        return jsonify({"error": "يجب إدخال صور لتحميلها"}), 400
 
     print(f"Processing chapter link: {chapter_link}, using folder: {folder_name}")  # طباعة المدخلات
 
+    results = []
+    
     try:
-        # تنزيل بيانات الفصل
-        response = requests.get(chapter_link)
-        response.raise_for_status()
-        image_urls = [line.strip() for line in response.text.split("\n") if line.endswith((".jpg", ".png"))]
-        folder_path = f"{folder_name}/"
-        results = []
-
-        for i, url in enumerate(image_urls):
-            # تنزيل الصور الأصلية
-            img_data = requests.get(url).content
+        for i, file in enumerate(files):
             img_path = os.path.join(TEMP_FOLDER, f"{i+1:03}.jpg")
-            with open(img_path, "wb") as img_file:
-                img_file.write(img_data)
+            file.save(img_path)
 
             # معالجة الصور
             img = Image.open(img_path)
@@ -102,7 +94,7 @@ def process_and_upload():
             # رفع الصور إلى GitHub
             with open(modified_img_path, "rb") as img_file:
                 repo.create_file(
-                    f"{folder_path}{os.path.basename(modified_img_path)}",
+                    f"{folder_name}/{os.path.basename(modified_img_path)}",
                     f"Upload {os.path.basename(modified_img_path)}",
                     img_file.read(),
                     branch="main"
@@ -118,23 +110,6 @@ def process_and_upload():
     except Exception as e:
         print(f"Error during processing: {e}")  # طباعة الخطأ الذي حدث
         return jsonify({"error": str(e)}), 500
-
-
-@app.route("/process_and_save", methods=["POST"])
-def process_and_save():
-    try:
-        # معالجة البيانات القادمة من الطلب
-        data = request.json
-        if not data:
-            return jsonify({"error": "بيانات الطلب غير صالحة"}), 400
-
-        # يمكنك هنا إضافة المنطق الذي تحتاجه لمعالجة البيانات
-        return jsonify({"message": "تمت معالجة البيانات وحفظها بنجاح!"}), 200
-
-    except Exception as e:
-        print(f"Error during save processing: {e}")  # طباعة الخطأ الذي حدث
-        return jsonify({"error": str(e)}), 500
-
 
 if __name__ == "__main__":
     app.run(debug=True)
