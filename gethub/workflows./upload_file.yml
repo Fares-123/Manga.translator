@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # الخطوة 1: Checkout المستودع
-      - name: fares-123/Manga.translator
+      - name: Checkout repository
         uses: actions/checkout@v2
 
       # الخطوة 2: إعداد Git
